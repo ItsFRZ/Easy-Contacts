@@ -99,13 +99,13 @@ object ContactProvider : ProviderService {
                         }
 
                         val emailContact: Contact =
-                            getEmailId(context, contact, contactId, contactName)
+                            getEmailId(context, contact, contactId)
 
                         emailContact.let {
                             contact.contactEmailId = it.contactEmailId
                         }
                         val addressContact: Contact =
-                            getAddress(context, contact, contactId, contactName)
+                            getAddress(context, contact, contactId)
                         addressContact.let {
                             contact.contactAddress = it.contactAddress
                             contact.contactCountry = it.contactCountry
@@ -146,16 +146,15 @@ object ContactProvider : ProviderService {
         context: Context,
         contact: Contact,
         contactId: String,
-        contactName: String
     ): Contact {
         val whereClause =
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + "=? and " + ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
         val contentResolver = context.contentResolver
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
             mColumnProjectionsForPostal,
             whereClause,
-            arrayOf<String>(contactName, contactId),
+            arrayOf<String>(contactId),
             null
         )
 
@@ -195,17 +194,15 @@ object ContactProvider : ProviderService {
         context: Context,
         contact: Contact,
         contactId: String,
-        contactName: String
     ): Contact {
-        val whereClause =
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + "=? and " + ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
+        val whereClause = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
 
         val contentResolver = context.contentResolver
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
             arrayOf<String>(ContactsContract.CommonDataKinds.Email.ADDRESS),
             whereClause,
-            arrayOf<String>(contactName, contactId),
+            arrayOf<String>(contactId),
             null
         )
 
@@ -402,7 +399,10 @@ object ContactProvider : ProviderService {
             val res: Array<ContentProviderResult> = context.contentResolver.applyBatch(
                 ContactsContract.AUTHORITY, ops
             )
-            Log.d("INSERTION", "insertContact: ${contact.contactName} Contact Inserted Successfully")
+            Log.d(
+                "INSERTION",
+                "insertContact: ${contact.contactName} Contact Inserted Successfully"
+            )
         } catch (e: RemoteException) {
             e.printStackTrace()
         } catch (e: OperationApplicationException) {
@@ -416,185 +416,204 @@ object ContactProvider : ProviderService {
                     Update Contact
     */
 
+
     override suspend fun updateContact(context: Context, contact: Contact) {
-        val phoneNumberWhere  : String = ContactsContract.Data.DISPLAY_NAME + " = ?"
-        val phoneNumberParams = arrayOf<String>(contact.contactNumber)
 
-
-
-
-        val ops = arrayListOf<ContentProviderOperation>()
-        val rawContactInsertIndex = ops.size;
-        //Phone Number
-        ops.add(
-            ContentProviderOperation
-                .newUpdate(ContactsContract.Data.CONTENT_URI)
-                .withSelection(phoneNumberWhere,phoneNumberParams)
-                .withValueBackReference(
-                    ContactsContract.Data.RAW_CONTACT_ID,
-                    rawContactInsertIndex
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, contact.contactNumber)
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, "1").build()
-        );
-
-        //Display name/Contact name
-        ops.add(
-            ContentProviderOperation
-                .newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValueBackReference(
-                    ContactsContract.Contacts.Data.RAW_CONTACT_ID,
-                    rawContactInsertIndex
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME,
-                    contact.contactName
-                )
-                .build()
-        );
-
-        //Email details
-        ops.add(
-            ContentProviderOperation
-                .newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValueBackReference(
-                    ContactsContract.Data.RAW_CONTACT_ID,
-                    rawContactInsertIndex
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.Email.DATA, contact.contactEmailId)
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.Email.TYPE, "2").build()
-        );
-
-
-        //Postal Address
-
-        ops.add(
-            ContentProviderOperation
-                .newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValueBackReference(
-                    ContactsContract.Data.RAW_CONTACT_ID,
-                    rawContactInsertIndex
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, "")
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, "")
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.StructuredPostal.CITY,
-                    contact.contactAddress
-                )
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, "")
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,
-                    contact.contactPostalCode
-                )
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,
-                    contact.contactCountry
-                )
-
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, "3")
-
-                .build()
-        );
-
-
-        //Organization details
-        ops.add(
-            ContentProviderOperation
-                .newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValueBackReference(
-                    ContactsContract.Contacts.Data.RAW_CONTACT_ID,
-                    rawContactInsertIndex
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.Organization.COMPANY,
-                    contact.contactOrganization
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
-                )
-                .withValue(
-                    ContactsContract.CommonDataKinds.Organization.TITLE,
-                    contact.contactJobTitle
-                )
-                .withValue(
-                    ContactsContract.Contacts.Data.MIMETYPE,
-                    ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
-                )
-                .withValue(ContactsContract.CommonDataKinds.Organization.TYPE, "0")
-                .build()
-        )
-        try {
-            val res: Array<ContentProviderResult> = context.contentResolver.applyBatch(
-                ContactsContract.AUTHORITY, ops
-            )
-            Log.d("INSERTION", "insertContact: ${contact.contactName} Contact Inserted Successfully")
-        } catch (e: RemoteException) {
-            e.printStackTrace()
-        } catch (e: OperationApplicationException) {
-            e.printStackTrace()
-        }
     }
 
     /*
-                   Search Contact By Name
+                   Search Contact By Id
     */
 
+    suspend fun searchContactById(
+        context: Context,
+        contactId: String
+    ): Contact {
+
+        var contact = Contact(contactId, "", "", "", "", "", "", "", "", "", "", "")
+
+        getContactInfo(
+            context,
+            contact,
+            contactId
+        )
+
+        getEmailId(
+            context,
+            contact,
+            contactId
+        )
+
+        getAddress(
+            context,
+            contact,
+            contactId
+        )
+
+        getContactOrganization(
+            context,
+            contact,
+            contactId
+        )
+        getContactWebsite(
+            context,
+            contact,
+            contactId
+        )
+        return contact
+    }
+
+    private fun getContactInfo(context: Context, contact: Contact, contactId: String) {
+        val whereClause =
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            mColumnProjections,
+            whereClause,
+            arrayOf<String>(contactId),
+            null
+        )
+
+        var contactName: String? = ""
+        var contactPhotoUri: String? = ""
+        var contactThumbnailPhotoUri: String? = ""
+        var contactNumber: String? = ""
+        if (cursor != null && cursor.count > 0) {
+            try {
+                while (cursor.moveToNext()) {
+                    contactName = cursor.getString(1) ?: ""
+                    contactNumber = cursor.getString(2) ?: ""
+                    contactPhotoUri = cursor.getString(3) ?: ""
+                    contactThumbnailPhotoUri = cursor.getString(4) ?: ""
+
+                }
+            } catch (e: Exception) {
+                Log.e("EXCEPTION", "getContactInfo: $e")
+            } finally {
+                cursor.close()
+            }
+        }
+
+        if (contactName != null) {
+            contact.contactName = contactName.toString()
+        }
+
+
+        if (contactNumber != null) {
+            contact.contactNumber = contactNumber.toString()
+        }
+
+
+        if (contactThumbnailPhotoUri != null) {
+            contact.contactThumbnailImage = contactThumbnailPhotoUri.toString()
+        }
+
+
+        if (contactPhotoUri != null) {
+            contact.contactImage = contactPhotoUri.toString()
+        }
+
+
+//        if (contactOrganization != null) {
+//            contact.contactOrganization = contactOrganization.toString()
+//        }
+//
+//
+//        if (contactJobTitle != null) {
+//            contact.contactJobTitle = contactJobTitle.toString()
+//        }
+//
+//
+//        if (contactWebsite != null) {
+//            contact.contactWebAddress = contactWebsite.toString()
+//        }
+
+    }
+
+    private fun getContactOrganization(context: Context, contact: Contact, contactId: String) {
+        val whereClause =
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
+
+        val projections = arrayOf<String>(
+            ContactsContract.CommonDataKinds.Organization.COMPANY,
+            ContactsContract.CommonDataKinds.Organization.JOB_DESCRIPTION,
+        )
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            projections,
+            whereClause,
+            arrayOf<String>(contactId),
+            null
+        )
+
+
+        var contactOrganization: String? = ""
+        var contactJobTitle: String? = ""
+        if (cursor != null && cursor.count > 0) {
+            try {
+                while (cursor.moveToNext()) {
+                    contactOrganization = cursor.getString(0) ?: ""
+                    contactJobTitle = cursor.getString(1) ?: ""
+
+                }
+            } catch (e: Exception) {
+                Log.e("EXCEPTION", "getContactInfo: $e")
+            } finally {
+                cursor.close()
+            }
+        }
+
+
+
+
+        if (contactOrganization != null) {
+            contact.contactOrganization = contactOrganization.toString()
+        }
+
+
+        if (contactJobTitle != null) {
+            contact.contactJobTitle = contactJobTitle.toString()
+        }
+
+
+    }
+
+    private fun getContactWebsite(context: Context, contact: Contact, contactId: String) {
+        val whereClause =
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?"
+
+        val projections = arrayOf<String>(
+            ContactsContract.CommonDataKinds.Website.URL,
+        )
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            projections,
+            whereClause,
+            arrayOf<String>(contactId),
+            null
+        )
+
+
+        var contactWebsite: String? = ""
+        if (cursor != null && cursor.count > 0) {
+            try {
+                while (cursor.moveToNext()) {
+                    contactWebsite = cursor.getString(0) ?: ""
+                }
+            } catch (e: Exception) {
+                Log.e("EXCEPTION", "getContactInfo: $e")
+            } finally {
+                cursor.close()
+            }
+        }
+
+
+        if (contactWebsite != null) {
+            contact.contactWebAddress = contactWebsite.toString()
+        }
+
+    }
 }
