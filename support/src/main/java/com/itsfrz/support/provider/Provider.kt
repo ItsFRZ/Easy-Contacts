@@ -1,5 +1,6 @@
 package com.itsfrz.support.provider
 
+import android.R.id
 import android.content.*
 import android.database.Cursor
 import android.os.RemoteException
@@ -9,6 +10,10 @@ import com.itsfrz.support.Contact
 
 
 object ContactProvider : ProviderService {
+
+    private const val PROVIDER_ERROR = "PROVIDER_ERROR"
+    private const val PROVIDER_DEBUG = "PROVIDER_DEBUG"
+
 
     private val mColumnProjectionsForPostal = arrayOf<String>(
         ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,
@@ -231,8 +236,35 @@ object ContactProvider : ProviderService {
     */
 
     override suspend fun insertContact(context: Context, contact: Contact) {
+
+
+        val where: String = "${ContactsContract.CommonDataKinds.Phone.NUMBER} = ?"
+        val params: Array<String> = arrayOf<String>(
+            contact.contactNumber
+        )
+
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            null,
+            where,
+            params,
+            null
+        )
+
+        if (cursor != null) {
+            val gotContact = searchContactByNumber(context, contact.contactNumber)
+            contact.contactId = gotContact.contactId
+            Log.d(
+                PROVIDER_DEBUG,
+                "insertContact: Contact Already Present With Contact Number ${contact.contactNumber} & Contact Id ${contact.contactId}"
+            )
+            updateContact(context, contact)
+            return
+        }
+
         val ops = arrayListOf<ContentProviderOperation>()
-        val rawContactInsertIndex = ops.size;
+        var rawContactInsertIndex = ops.size;
 
         ops.add(
             ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
@@ -417,8 +449,80 @@ object ContactProvider : ProviderService {
     */
 
 
+    // Only name and number is updating currently // work on it
     override suspend fun updateContact(context: Context, contact: Contact) {
 
+        val ops = ArrayList<ContentProviderOperation>()
+        val contactId: String = contact.contactId
+
+        // Name
+        val(firstName,lastName) = contact.contactName.toString().split(" ")
+        // Name
+        var builder: ContentProviderOperation.Builder
+
+
+         // Name
+         builder =  ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+         builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+            )
+        )
+        builder.withValue(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME, lastName)
+        builder.withValue(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME, firstName)
+        ops.add(builder.build())
+
+        // Number
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?" + " AND " + ContactsContract.CommonDataKinds.Organization.TYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE.toString()
+            )
+        )
+        builder.withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, contact.contactNumber)
+        ops.add(builder.build())
+
+        // Email Address
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+            )
+        )
+        builder.withValue(ContactsContract.CommonDataKinds.Email.DATA,contact.contactEmailId)
+        builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE,2)
+        ops.add(builder.build())
+
+        // Address
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
+            )
+        )
+        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,contact.contactAddress)
+        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,contact.contactCountry)
+        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,contact.contactPostalCode)
+
+        ops.add(builder.build())
+
+
+        try {
+            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+        } catch (e: RemoteException) {
+            e.printStackTrace()
+        } catch (e: OperationApplicationException) {
+            e.printStackTrace()
+        }
     }
 
     /*
@@ -462,6 +566,47 @@ object ContactProvider : ProviderService {
         )
         return contact
     }
+
+    suspend fun searchContactByNumber(
+        context: Context,
+        contactNumber: String
+    ): Contact {
+
+        val where = "${ContactsContract.CommonDataKinds.Phone.NUMBER} = ?"
+        val param = arrayOf<String>(
+            contactNumber
+        )
+        val contentResolver = context.contentResolver
+        val contact = Contact("", "", "", "", "", "", "", "", "", "", "", "")
+        var contactId = ""
+        var cursor: Cursor? = null
+        try {
+            cursor = contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                mColumnProjections,
+                where,
+                param,
+                null
+            )
+
+            cursor?.let { cursor ->
+                while (cursor.moveToNext()) {
+                    contactId = cursor.getString(0)
+                }
+                cursor.close()
+            }
+        } catch (e: Exception) {
+            Log.e(PROVIDER_ERROR, "searchContactByNumber: $e")
+        } finally {
+            if (cursor != null && !cursor.isClosed)
+                cursor.close()
+        }
+
+
+        contact.contactId = contactId
+        return contact
+    }
+
 
     private fun getContactInfo(context: Context, contact: Contact, contactId: String) {
         val whereClause =

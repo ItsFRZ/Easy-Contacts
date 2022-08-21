@@ -1,6 +1,7 @@
 package com.itsfrz.contact_content_provider
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.itsfrz.support.Contact
@@ -37,51 +38,48 @@ class MainActivity : AppCompatActivity() {
 //        }
 
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val contacts: List<Contact> = ContactProvider.getContacts(context)
-            withContext(Dispatchers.Main){
-                contacts.forEach {
-                    Log.d("ContactList", "onCreate: ${it.toString()}")
-                }
-            }
-        }
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val contacts: List<Contact> = ContactProvider.getContacts(context)
+//            withContext(Dispatchers.Main){
+//                contacts.forEach {
+//                    Log.d("ContactList", "onCreate: ${it.toString()}")
+//                }
+//            }
+//        }
 
 
 
         /*
-
-
-                contactId=28008, contactName=DemoFour
-                contactId=27160, contactName=Alex Demo
-                contactId=28004, contactName=Shawn
-                contactId=28003, contactName=Ron
+            contactId=8, contactName=Demo 1
+            contactId=9, contactName=Demo 2
+            contactId=10, contactName=Demo 3
          */
 
         CoroutineScope(Dispatchers.IO).launch {
             val updateContact = Contact(
-                contactId = "28007",
-                contactName = "Shawn Michael",
-                contactNumber = "9876543210",
-                contactImage = "content://com.android.contacts/display_photo/18",
-                contactThumbnailImage = "content://com.android.contacts/contacts/27161/photo",
+                contactId = "8",
+                contactName = "Demo 100",
+                contactNumber = "1234567890",
+                contactImage = "",
+                contactThumbnailImage = "",
                 contactOrganization = "Google",
                 contactJobTitle = "Software Engineer",
                 contactAddress = "New Journal Street, LA",
                 contactEmailId = "michael@shawn.com",
                 contactCountry = "USA",
-                contactPostalCode = "12345",
+                contactPostalCode = "123456",
                 contactWebAddress = "https://www.google.com"
             )
             ContactProvider.updateContact(
                 context,
                 updateContact
             )
+        }
 
-        }
-        CoroutineScope(Dispatchers.IO).launch {
-            val contact = ContactProvider.searchContactById(context, "27972")
-            Log.d("SEARCH", "onCreate: ${contact.toString()}")
-        }
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val contact = ContactProvider.searchContactById(context, "27972")
+//            Log.d("SEARCH", "onCreate: ${contact.toString()}")
+//        }
 
 
     }

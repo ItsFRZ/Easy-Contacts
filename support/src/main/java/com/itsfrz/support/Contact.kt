@@ -1,5 +1,8 @@
 package com.itsfrz.support
 
+import android.content.ContentProviderOperation
+import android.provider.ContactsContract
+
 data class Contact(
     var contactId : String,
     var contactName : String,
@@ -14,3 +17,6 @@ data class Contact(
     var contactCountry : String,
     var contactPostalCode : String,
 )
+
+
+
