@@ -55,26 +55,26 @@ class MainActivity : AppCompatActivity() {
             contactId=10, contactName=Demo 3
          */
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val updateContact = Contact(
-                contactId = "8",
-                contactName = "Demo 100",
-                contactNumber = "1234567890",
-                contactImage = "",
-                contactThumbnailImage = "",
-                contactOrganization = "Google",
-                contactJobTitle = "Software Engineer",
-                contactAddress = "New Journal Street, LA",
-                contactEmailId = "michael@shawn.com",
-                contactCountry = "USA",
-                contactPostalCode = "123456",
-                contactWebAddress = "https://www.google.com"
-            )
-            ContactProvider.updateContact(
-                context,
-                updateContact
-            )
-        }
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val updateContact = Contact(
+//                contactId = "8",
+//                contactName = "Demo 100",
+//                contactNumber = "1234567890",
+//                contactImage = "",
+//                contactThumbnailImage = "",
+//                contactOrganization = "Google",
+//                contactJobTitle = "Software Engineer",
+//                contactAddress = "New Journal Street, LA",
+//                contactEmailId = "michael@shawn.com",
+//                contactCountry = "USA",
+//                contactPostalCode = "123456",
+//                contactWebAddress = "https://www.google.com"
+//            )
+//            ContactProvider.updateContact(
+//                context,
+//                updateContact
+//            )
+//        }
 
 //        CoroutineScope(Dispatchers.IO).launch {
 //            val contact = ContactProvider.searchContactById(context, "27972")
