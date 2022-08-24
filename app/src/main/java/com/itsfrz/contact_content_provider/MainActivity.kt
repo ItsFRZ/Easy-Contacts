@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val context = this
+//        val context = this
 
 
 //        CoroutineScope(Dispatchers.IO).launch {
@@ -81,6 +81,7 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("SEARCH", "onCreate: ${contact.toString()}")
 //        }
 
+//
 
     }
 }
