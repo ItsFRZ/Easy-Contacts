@@ -1,10 +1,12 @@
 package com.itsfrz.support.provider
 
-import android.R.id
+import android.annotation.SuppressLint
 import android.content.*
 import android.database.Cursor
+import android.net.Uri
 import android.os.RemoteException
 import android.provider.ContactsContract
+import android.provider.ContactsContract.PhoneLookup
 import android.util.Log
 import com.itsfrz.support.Contact
 
@@ -60,7 +62,6 @@ object ContactProvider : ProviderService {
             null,
             null
         )
-        cursor
         try {
             cursor?.let {
                 if (it.count > 0) {
@@ -238,30 +239,29 @@ object ContactProvider : ProviderService {
     override suspend fun insertContact(context: Context, contact: Contact) {
 
 
-        val where: String = "${ContactsContract.CommonDataKinds.Phone.NUMBER} = ?"
-        val params: Array<String> = arrayOf<String>(
-            contact.contactNumber
-        )
-
-        val contentResolver = context.contentResolver
-        val cursor = contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            null,
-            where,
-            params,
-            null
-        )
-
-        if (cursor != null) {
-            val gotContact = searchContactByNumber(context, contact.contactNumber)
-            contact.contactId = gotContact.contactId
-            Log.d(
-                PROVIDER_DEBUG,
-                "insertContact: Contact Already Present With Contact Number ${contact.contactNumber} & Contact Id ${contact.contactId}"
-            )
-            updateContact(context, contact)
-            return
-        }
+//        val where: String = "${ContactsContract.CommonDataKinds.Phone.NUMBER} = ?"
+//        val params: Array<String> = arrayOf<String>(
+//            contact.contactNumber
+//        )
+//
+//        val contentResolver = context.contentResolver
+//        val cursor = contentResolver.query(
+//            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+//            null,
+//            where,
+//            params,
+//            null
+//        )
+//        if (cursor != null) {
+//            val gotContact = searchContactByNumber(context, contact.contactNumber)
+//            contact.contactId = gotContact.contactId
+//            Log.d(
+//                PROVIDER_DEBUG,
+//                "insertContact: Contact Already Present With Contact Number ${contact.contactNumber} & Contact Id ${contact.contactId}"
+//            )
+//            updateContact(context, contact)
+//            return
+//        }
 
         val ops = arrayListOf<ContentProviderOperation>()
         var rawContactInsertIndex = ops.size;
@@ -427,6 +427,14 @@ object ContactProvider : ProviderService {
                 .withValue(ContactsContract.CommonDataKinds.Organization.TYPE, "0")
                 .build()
         )
+
+        ops.add(
+            ContentProviderOperation
+                .newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, rawContactInsertIndex)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE,contact.contactImage).build()
+        )
         try {
             val res: Array<ContentProviderResult> = context.contentResolver.applyBatch(
                 ContactsContract.AUTHORITY, ops
@@ -455,15 +463,18 @@ object ContactProvider : ProviderService {
         val ops = ArrayList<ContentProviderOperation>()
         val contactId: String = contact.contactId
 
+        val contactName = contact.contactName.toString()
         // Name
-        val(firstName,lastName) = contact.contactName.toString().split(" ")
+        var firstName = if (contactName.contains(" ")) contactName.split(" ")[0] else contactName
+        var lastName = if (contactName.contains(" ")) contactName.split(" ")[1] else ""
+
         // Name
         var builder: ContentProviderOperation.Builder
 
 
-         // Name
-         builder =  ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
-         builder.withSelection(
+        // Name
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
             ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
             arrayOf(
                 contactId,
@@ -477,11 +488,10 @@ object ContactProvider : ProviderService {
         // Number
         builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
         builder.withSelection(
-            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?" + " AND " + ContactsContract.CommonDataKinds.Organization.TYPE + "=?",
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
             arrayOf(
                 contactId,
-                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
-                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE.toString()
+                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
             )
         )
         builder.withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, contact.contactNumber)
@@ -496,8 +506,8 @@ object ContactProvider : ProviderService {
                 ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
             )
         )
-        builder.withValue(ContactsContract.CommonDataKinds.Email.DATA,contact.contactEmailId)
-        builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE,2)
+        builder.withValue(ContactsContract.CommonDataKinds.Email.DATA, contact.contactEmailId)
+        builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE, 2)
         ops.add(builder.build())
 
         // Address
@@ -509,12 +519,62 @@ object ContactProvider : ProviderService {
                 ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
             )
         )
-        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,contact.contactAddress)
-        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,contact.contactCountry)
-        builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,contact.contactPostalCode)
-
+        builder.withValue(
+            ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,
+            contact.contactAddress
+        )
+        builder.withValue(
+            ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,
+            contact.contactCountry
+        )
+        builder.withValue(
+            ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,
+            contact.contactPostalCode
+        )
         ops.add(builder.build())
 
+
+        //Organization details
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+            )
+        )
+        builder.withValue(
+            ContactsContract.CommonDataKinds.Organization.COMPANY,
+            contact.contactOrganization
+        )
+        builder.withValue(
+            ContactsContract.Contacts.Data.MIMETYPE,
+            ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+        )
+        builder.withValue(
+            ContactsContract.CommonDataKinds.Organization.TITLE,
+            contact.contactJobTitle
+        )
+        builder.withValue(
+            ContactsContract.Contacts.Data.MIMETYPE,
+            ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+        )
+        ops.add(builder.build())
+
+//        Contact Image
+        builder = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+        builder.withSelection(
+            ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
+            arrayOf(
+                contactId,
+                ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE
+            )
+        )
+        builder.withValue(
+            ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE,
+            contact.contactImage
+        )
+        ops.add(builder.build())
 
         try {
             context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
@@ -760,5 +820,44 @@ object ContactProvider : ProviderService {
             contact.contactWebAddress = contactWebsite.toString()
         }
 
+    }
+
+
+    @SuppressLint("Range")
+    override suspend fun deleteContact(context: Context, contact: Contact): Boolean {
+        val contactUri: Uri =
+            Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(contact.contactNumber))
+        val cur: Cursor? = context
+            .getContentResolver()
+            .query(contactUri, null, null, null, null)
+
+        try {
+            cur?.let {
+                if (cur.moveToFirst()) {
+                    do {
+                        if (cur.getString(cur.getColumnIndex(PhoneLookup.DISPLAY_NAME))
+                                .equals(contact.contactName, ignoreCase = true)
+                        ) {
+                            val lookupKey =
+                                cur.getString(cur.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY))
+                            val uri: Uri = Uri.withAppendedPath(
+                                ContactsContract.Contacts.CONTENT_LOOKUP_URI,
+                                lookupKey
+                            )
+                            context.getContentResolver().delete(uri, null, null)
+                            return true
+                        }
+                    } while (cur.moveToNext())
+                }
+                cur.close()
+            }
+        } catch (e: Exception) {
+            println(e.stackTrace)
+        }finally {
+            cur?.let {
+                cur.close()
+            }
+        }
+        return false
     }
 }

@@ -8,7 +8,7 @@ interface ProviderService {
 
     suspend fun insertContact(context: Context, contact: Contact)
 
-    suspend fun updateContact(context: Context, oldContact: Contact,)
+    suspend fun updateContact(context: Context, oldContact: Contact)
 
-//    suspend fun deleteContactInProvider(context: Context, contact: ContactModel)
+    suspend fun deleteContact(context: Context, contact: Contact) : Boolean
 }

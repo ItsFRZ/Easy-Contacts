@@ -1,7 +1,6 @@
 package com.itsfrz.contact_content_provider
 
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.itsfrz.support.Contact
@@ -22,8 +21,8 @@ class MainActivity : AppCompatActivity() {
 //        CoroutineScope(Dispatchers.IO).launch {
 //            val contact = Contact(
 //                "",
-//                "DemoFour",
-//                "1111122222",
+//                "Demo Four",
+//                "1234567890",
 //                "",
 //                "",
 //                "OneTwo",
@@ -48,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 //        }
 
 
-
         /*
             contactId=8, contactName=Demo 1
             contactId=9, contactName=Demo 2
@@ -57,16 +55,16 @@ class MainActivity : AppCompatActivity() {
 
 //        CoroutineScope(Dispatchers.IO).launch {
 //            val updateContact = Contact(
-//                contactId = "8",
-//                contactName = "Demo 100",
-//                contactNumber = "1234567890",
+//                contactId = "28242",
+//                contactName = "Demo Six",
+//                contactNumber = "0987654321",
 //                contactImage = "",
 //                contactThumbnailImage = "",
 //                contactOrganization = "Google",
 //                contactJobTitle = "Software Engineer",
 //                contactAddress = "New Journal Street, LA",
-//                contactEmailId = "michael@shawn.com",
-//                contactCountry = "USA",
+//                contactEmailId = "demo@shawn.com",
+//                contactCountry = "IN",
 //                contactPostalCode = "123456",
 //                contactWebAddress = "https://www.google.com"
 //            )
@@ -81,7 +79,31 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("SEARCH", "onCreate: ${contact.toString()}")
 //        }
 
+//        Demo Five 28240
+
+//        contactId=28240, contactName=Demo Five, contactNumber=55555522222,
+//        contactId=28242, contactName=Demo Six, contactNumber=0987654321
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val result = ContactProvider.deleteContact(
+//                context, Contact(
+//                    contactId = "28240",
+//                    "Demo Five",
+//                    "55555522222",
+//                    "",
+//                    "",
+//                    "OneTwo",
+//                    "Engineer",
+//                    "Macbook Pro",
+//                    "",
+//                    "onetwo@google.com",
+//                    "India",
+//                    "12345"
+//                )
+//            )
 //
+//            Log.d("DELETE", "onCreate: ${if(result) "Deleted" else "Not Deleted"}")
+//        }
+
 
     }
 }
