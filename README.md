@@ -4,19 +4,18 @@ Easy Contact Library is meant to easify crud operations with Contact Content Pro
 > Step 1. Add the JitPack repository to your build file
 
 ```gradle
-  allprojects {
-      repositories {
-        ...
-        maven { url 'https://jitpack.io' }
-      }
-    }
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
 ```
     
 > Step 2. Add the dependency
 
 ```gradle
-dependencies {
-	   implementation 'com.github.ItsFRZ:Easy-Contacts:v1.0.0'
+	dependencies {
+	        implementation 'com.github.ItsFRZ:Easy-Contacts:Tag'
 	}
-  
 ```
