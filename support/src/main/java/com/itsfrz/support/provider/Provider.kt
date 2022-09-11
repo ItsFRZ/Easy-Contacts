@@ -823,6 +823,7 @@ object ContactProvider : ProviderService {
     }
 
 
+
     @SuppressLint("Range")
     override suspend fun deleteContact(context: Context, contact: Contact): Boolean {
         val contactUri: Uri =
@@ -860,4 +861,16 @@ object ContactProvider : ProviderService {
         }
         return false
     }
+
+    override suspend fun deleteContactList(context: Context, contacts: List<Contact>): Boolean {
+        val contactIterator = contacts.iterator()
+        while (contactIterator.hasNext()){
+            val contact = contactIterator.next()
+            val result = deleteContact(context,contact)
+            if (!result) return false;
+        }
+        return true
+    }
+
+
 }

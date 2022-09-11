@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 //            ContactProvider.insertContact(context, contact = contact)
 //        }
 
-
+//
 //        CoroutineScope(Dispatchers.IO).launch {
 //            val contacts: List<Contact> = ContactProvider.getContacts(context)
 //            withContext(Dispatchers.Main){
@@ -85,7 +85,8 @@ class MainActivity : AppCompatActivity() {
 //        contactId=28242, contactName=Demo Six, contactNumber=0987654321
 //        CoroutineScope(Dispatchers.IO).launch {
 //            val result = ContactProvider.deleteContact(
-//                context, Contact(
+//                context,
+//                Contact(
 //                    contactId = "28240",
 //                    "Demo Five",
 //                    "55555522222",
@@ -104,6 +105,42 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("DELETE", "onCreate: ${if(result) "Deleted" else "Not Deleted"}")
 //        }
 
+//        val contactList = listOf<Contact>(
+//            Contact(
+//                contactId = "17",
+//                "Yfkkh",
+//                "1 (255) 4 585",
+//                "",
+//                "",
+//                "OneTwo",
+//                "Engineer",
+//                "Macbook Pro",
+//                "",
+//                "onetwo@google.com",
+//                "India",
+//                "12345"
+//            ),
+//
+//            Contact(
+//                contactId = "18",
+//                "Rlhaf",
+//                "1 (268) 775-85",
+//                "",
+//                "",
+//                "TwoOne",
+//                "Engineer",
+//                "Macbook Pro",
+//                "",
+//                "onetwo@google.com",
+//                "India",
+//                "12345"
+//            )
+//
+//        )
+//        CoroutineScope(Dispatchers.IO).launch{
+//            val result = ContactProvider.deleteContactList(context = context,contactList)
+//            Log.d("DELETE_LIST", "onCreate: ${if(result) "List Deleted" else "List Not Deleted"}")
+//        }
 
     }
 }

@@ -11,4 +11,6 @@ interface ProviderService {
     suspend fun updateContact(context: Context, oldContact: Contact)
 
     suspend fun deleteContact(context: Context, contact: Contact) : Boolean
+
+    suspend fun deleteContactList(context: Context, contacts: List<Contact>) : Boolean
 }
